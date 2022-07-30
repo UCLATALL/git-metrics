@@ -1,10 +1,10 @@
 [tool.poetry]
 name = "git-metrics"
 version = "0.1.0"
-description = ""
+description = "Metrics for your git repository"
 authors = ["Adam Blake <adamblake@g.ucla.edu>"]
 license = "AGPL-3+"
-readme = "README.rst"
+readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9"
