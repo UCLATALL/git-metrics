@@ -1,5 +1,11 @@
 from .similarity import compare
 from .activity import compile
-from .utils import *
+from .utils import (
+    date_range,
+    recent_commit,
+    resolve_branch,
+    resolve_commit,
+    assert_git_installed,
+)
 
 __version__ = "0.1.0"
