@@ -3,9 +3,6 @@ import git
 import os
 import pathlib
 
-from datetime import datetime
-from dateutil import parser as dateparser
-
 from .activity import compile
 from .similarity import compare
 from . import utils as utils
@@ -49,8 +46,8 @@ def similarity(
         end_commit = utils.resolve_commit(repo, end)
     else:
         branch = utils.resolve_commit(repo, branch)
-        start_commit = utils.recent_commit(branch, get_date(start))
-        end_commit = utils.recent_commit(branch, get_date(end))
+        start_commit = utils.recent_commit(branch, utils.parse_date(start))
+        end_commit = utils.recent_commit(branch, utils.parse_date(end))
 
     similarity_index = compare(start_commit, end_commit)
     print_fg = "green" if similarity_index > 65 else "blue"
@@ -82,8 +79,8 @@ def activity(repo: str, branch: str, start: str, end: str, output: os.PathLike) 
     utils.assert_git_installed()
     repo = get_repo(repo)
     branch = utils.resolve_branch(repo, branch)
-    start_date = get_date(start)
-    end_date = get_date(end)
+    start_date = utils.parse_date(start)
+    end_date = utils.parse_date(end)
     result = compile(branch, start_date, end_date, output)
     click.echo(f'Wrote {len(result)} rows to "{output}"')
 
@@ -94,10 +91,3 @@ def get_repo(repo_path: str) -> git.Repo:
         return git.Repo(repo_path)
     except (git.NoSuchPathError, git.InvalidGitRepositoryError):
         raise ValueError(f'Could not find a valid git repository at "{repo_path}"')
-
-
-def get_date(date: str) -> datetime:
-    try:
-        return dateparser.parse(date).astimezone()
-    except dateparser.ParserError:
-        raise ValueError(f'Had trouble with "{date}", try "YYYY-MM-DD" format')

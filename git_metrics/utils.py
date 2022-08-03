@@ -4,6 +4,7 @@ import subprocess as sp
 
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from dateutil import parser as dateparser
 
 
 def assert_git_installed() -> None:
@@ -48,6 +49,13 @@ def date_range(start_date: datetime, end_date: datetime) -> list[datetime]:
         start_date + relativedelta(days=days)
         for days in range((end_date - start_date).days + 1)
     ]
+
+
+def parse_date(date: str) -> datetime:
+    try:
+        return dateparser.parse(date).astimezone()
+    except dateparser.ParserError:
+        raise ValueError(f'Had trouble with "{date}", try "YYYY-MM-DD" format')
 
 
 def dt_to_str(dt: datetime) -> str:
