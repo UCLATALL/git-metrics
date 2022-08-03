@@ -6,6 +6,7 @@ from .utils import (
     resolve_branch,
     resolve_commit,
     assert_git_installed,
+    parse_date,
 )
 
-__version__ = "0.3.2"
+__version__ = "0.3.3"
