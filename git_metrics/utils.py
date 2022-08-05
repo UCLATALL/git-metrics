@@ -1,3 +1,4 @@
+import click
 import git
 import os
 import subprocess as sp
@@ -5,6 +6,7 @@ import subprocess as sp
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil import parser as dateparser
+from typing import Iterable, Optional
 
 
 def assert_git_installed() -> None:
@@ -73,3 +75,13 @@ def write_text(file: os.PathLike, text: str) -> None:
 
 def flatten(nested_list):
     return [item for sub_list in nested_list for item in sub_list]
+
+
+def create_progress_bar(
+    iterable: Optional[Iterable] = None,
+    length: Optional[int] = None,
+    label: Optional[str] = None,
+):
+    return click.progressbar(
+        iterable, length=length, label=label, empty_char=" ", fill_char="-"
+    )

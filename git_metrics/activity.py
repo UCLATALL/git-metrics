@@ -1,7 +1,6 @@
 import csv
 import git
 import os
-import tqdm
 
 from datetime import datetime
 from dateutil import parser as dateparser
@@ -35,21 +34,23 @@ def git_activity(
     rows = []
     current_date = start_date
     date_range = utils.date_range(start_date, end_date)
-    date_iterator = tqdm.tqdm(date_range[1:], "Compiling git activity")
-    for next_date in date_iterator:
-        commits, stats = log_data(branch, current_date, next_date)
-        _, insertions, deletions = summarize_stats(stats)
-        authors = [commit.author for commit in commits]
-        rows.append(
-            {
-                "date": utils.dt_to_str(next_date),
-                "n_commits": len(commits),
-                "n_authors": len(set(authors)),
-                "n_insertions": insertions,
-                "n_deletions": deletions,
-            }
-        )
-        current_date = next_date
+    with utils.create_progress_bar(
+        date_range, label="Compiling git activity"
+    ) as progress:
+        for next_date in progress:
+            commits, stats = log_data(branch, current_date, next_date)
+            _, insertions, deletions = summarize_stats(stats)
+            authors = [commit.author for commit in commits]
+            rows.append(
+                {
+                    "date": utils.dt_to_str(next_date),
+                    "n_commits": len(commits),
+                    "n_authors": len(set(authors)),
+                    "n_insertions": insertions,
+                    "n_deletions": deletions,
+                }
+            )
+            current_date = next_date
     return rows
 
 

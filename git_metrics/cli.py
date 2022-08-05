@@ -78,9 +78,9 @@ def similarity(
     "-e",
     "--end",
     "end",
-    show_default=True,
+    show_default=False,
     default=str(datetime.today().astimezone().date()),
-    help="The date-time to end on (use YYYY-MM-DD)",
+    help="The date-time to end on (use YYYY-MM-DD) [default: today]",
 )
 @click.option(
     "-b",
@@ -88,7 +88,7 @@ def similarity(
     "branch",
     show_default=True,
     default="main",
-    help="The branch to compare on",
+    help="The branch of interest",
 )
 @click.option(
     "-o",
@@ -125,37 +125,32 @@ def similarity_across(
     to the CSV specified by `--output`.
     """
     utils.assert_git_installed()
-    if pathlib.Path(output.name).expanduser().exists() and not overwrite:
-        click.confirm("The output file will be overwritten. Continue?", abort=True)
-
+    check_output(output, overwrite)
     repo = get_repo(repo)
     branch = utils.resolve_branch(repo, branch)
-    if end is None:
-        end = datetime.today().astimezone()
-    else:
-        end = utils.parse_date(end)
+    end = datetime.today().astimezone() if end is None else utils.parse_date(end)
 
     rows = []
     anchors = [utils.parse_date(date) for date in list(start)]
     comparisons = [utils.date_range(anchor, end) for anchor in anchors]
-    with click.progressbar(length=len(utils.flatten(comparisons))) as progress:
+    with utils.create_progress_bar(
+        length=len(utils.flatten(comparisons)), label="Computing similarity"
+    ) as progress:
         for i, anchor in enumerate(anchors):
             anchor_commit = utils.recent_commit(branch, anchor)
-            progress.label = f"Comparing from {str(anchor.date())}"
             for comparison in comparisons[i]:
                 comparison_commit = utils.recent_commit(branch, comparison)
+                similarity = compare(anchor_commit, comparison_commit)
+                progress.update(1)
                 rows.append(
                     {
                         "start_commit": anchor_commit,
                         "end_commit": comparison_commit,
                         "start_date": anchor,
                         "end_date": comparison,
-                        "similarity": compare(anchor_commit, comparison_commit),
+                        "similarity": similarity,
                     }
                 )
-                progress.update(1)
-        progress.label = "Comparisons complete"
-
     write = csv.writer(output, quoting=csv.QUOTE_ALL)
     write.writerow(rows[0].keys())
     write.writerows(rows)
@@ -164,13 +159,30 @@ def similarity_across(
 
 @click.command()
 @click.argument("repo", type=str)
-@click.argument("branch", type=str)
 @click.argument("start", type=str)
-@click.argument("end", type=str)
+@click.option(
+    "-e",
+    "--end",
+    "end",
+    show_default=False,
+    default=str(datetime.today().astimezone().date()),
+    help="The date-time to end on (use YYYY-MM-DD) [default: today]",
+)
+@click.option(
+    "-b",
+    "--branch",
+    "branch",
+    show_default=True,
+    default="main",
+    help="The branch of interest",
+)
 @click.option(
     "-o",
     "--output",
-    type=click.File("wb"),
+    type=click.File(
+        "w",
+        atomic=True,
+    ),
     show_default=True,
     default="./git-activity.csv",
     prompt="Output file",
@@ -189,18 +201,20 @@ def activity(
 ) -> str:
     """
     Compile metrics of the activity on a git REPO's BRANCH from the START date to the
-    END date.
+    `--end` date.
     """
     utils.assert_git_installed()
-    if pathlib.Path(output.name).expanduser().exists() and not overwrite:
-        click.confirm("The output file will be overwritten. Continue?", abort=True)
-
+    check_output(output, overwrite)
     repo = get_repo(repo)
     branch = utils.resolve_branch(repo, branch)
     start_date = utils.parse_date(start)
     end_date = utils.parse_date(end)
-    result = compile(branch, start_date, end_date, output)
-    click.echo(f'Wrote {len(result)} rows to "{output}"')
+
+    activity = compile(branch, start_date, end_date)
+    write = csv.writer(output, quoting=csv.QUOTE_ALL)
+    write.writerow(activity[0].keys())
+    write.writerows([row.values() for row in activity])
+    click.echo(f'Wrote {len(activity)} rows to "{output.name}"')
 
 
 def get_repo(repo_path: str) -> git.Repo:
@@ -209,3 +223,17 @@ def get_repo(repo_path: str) -> git.Repo:
         return git.Repo(repo_path)
     except (git.NoSuchPathError, git.InvalidGitRepositoryError):
         raise ValueError(f'Could not find a valid git repository at "{repo_path}"')
+
+
+def check_output(output: click.File, overwrite: bool):
+    output_path = pathlib.Path(output.name).expanduser()
+    if output_path.is_dir():
+        click.echo(
+            (
+                f'The output path "{output.name}" resolves to a directory.\n'
+                "You probably don't want to overwrite a full directory..."
+            )
+        )
+        raise click.Abort()
+    if output_path.exists() and not overwrite:
+        click.confirm("The output file will be overwritten. Continue?", abort=True)
