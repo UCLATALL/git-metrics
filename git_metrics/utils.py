@@ -69,3 +69,7 @@ def parse_int(string: str) -> int:
 def write_text(file: os.PathLike, text: str) -> None:
     with open(file, "w") as f:
         f.write(text)
+
+
+def flatten(nested_list):
+    return [item for sub_list in nested_list for item in sub_list]

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "git-metrics"
-version = "0.3.3"
+version = "0.4.0"
 description = "Metrics for your git repository"
 authors = ["Adam Blake <adamblake@g.ucla.edu>"]
 license = "AGPL-3+"
@@ -22,6 +22,7 @@ mypy = "^0.971"
 
 [tool.poetry.scripts]
 similarity = "git_metrics.cli:similarity"
+similarity-across = "git_metrics.cli:similarity_across"
 activity = "git_metrics.cli:activity"
 
 [build-system]
