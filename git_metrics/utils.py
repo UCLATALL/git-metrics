@@ -1,4 +1,5 @@
 import click
+import csv
 import git
 import os
 import subprocess as sp
@@ -6,7 +7,7 @@ import subprocess as sp
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil import parser as dateparser
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Union
 
 
 def assert_git_installed() -> None:
@@ -19,6 +20,8 @@ def recent_commit(branch: git.Head, date: datetime) -> git.Commit:
     hash = repo.git.log(
         branch, "-1", f"--until={date.isoformat()}", "--format=format:%H"
     )
+    if hash == "":
+        raise Exception("No commits were made prior to the given date.")
     return repo.commit(hash)
 
 
@@ -68,7 +71,7 @@ def parse_int(string: str) -> int:
     return int("".join(filter(str.isdigit, string)))
 
 
-def write_text(file: os.PathLike, text: str) -> None:
+def write_text(text: str, file: os.PathLike) -> None:
     with open(file, "w") as f:
         f.write(text)
 
@@ -85,3 +88,14 @@ def create_progress_bar(
     return click.progressbar(
         iterable, length=length, label=label, empty_char=" ", fill_char="-"
     )
+
+
+def listdict_to_csv(data: list[dict], file: Union[os.PathLike, click.File]) -> None:
+    try:
+        file = open(file, "w")
+    except TypeError:
+        pass
+    write = csv.writer(file, quoting=csv.QUOTE_ALL)
+    write.writerow(data[0].keys())
+    write.writerows([row.values() for row in data])
+    file.close()

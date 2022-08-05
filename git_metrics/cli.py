@@ -1,13 +1,11 @@
-import csv
 import click
 import git
-import os
 import pathlib
 
 from datetime import datetime
 from typing import Tuple
 
-from .activity import compile
+from .activity import compile_activity
 from .similarity import compare
 from . import utils as utils
 
@@ -151,9 +149,7 @@ def similarity_across(
                         "similarity": similarity,
                     }
                 )
-    write = csv.writer(output, quoting=csv.QUOTE_ALL)
-    write.writerow(rows[0].keys())
-    write.writerows(rows)
+    utils.listdict_to_csv(rows, output)
     click.echo(f'Wrote {len(rows)} rows to "{output.name}"')
 
 
@@ -197,7 +193,7 @@ def similarity_across(
     help="Use this option to automatically confirm prompt to overwrite output file",
 )
 def activity(
-    repo: str, branch: str, start: str, end: str, output: os.PathLike, overwrite: bool
+    repo: str, branch: str, start: str, end: str, output: click.File, overwrite: bool
 ) -> str:
     """
     Compile metrics of the activity on a git REPO's BRANCH from the START date to the
@@ -210,10 +206,8 @@ def activity(
     start_date = utils.parse_date(start)
     end_date = utils.parse_date(end)
 
-    activity = compile(branch, start_date, end_date)
-    write = csv.writer(output, quoting=csv.QUOTE_ALL)
-    write.writerow(activity[0].keys())
-    write.writerows([row.values() for row in activity])
+    activity = compile_activity(branch, start_date, end_date)
+    utils.listdict_to_csv(activity, output)
     click.echo(f'Wrote {len(activity)} rows to "{output.name}"')
 
 
@@ -237,3 +231,6 @@ def check_output(output: click.File, overwrite: bool):
         raise click.Abort()
     if output_path.exists() and not overwrite:
         click.confirm("The output file will be overwritten. Continue?", abort=True)
+    if not output_path.parent.is_dir():
+        output_path.parent.mkdir(parents=True)
+        click.echo(f'Created output directory "{output_path.parent}"')

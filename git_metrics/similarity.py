@@ -16,9 +16,9 @@ def compare(start: git.Commit, end: git.Commit, glob: str = "*") -> int:
     with TemporaryDirectory() as temp_dir:
         git.Repo.init(temp_dir)
         file1 = pathlib.Path(temp_dir) / "start.txt"
-        utils.write_text(file1, read_files(start, glob))
+        utils.write_text(read_files(start, glob), file1)
         file2 = pathlib.Path(temp_dir) / "end.txt"
-        utils.write_text(file2, read_files(end, glob))
+        utils.write_text(read_files(end, glob), file2)
         output = sp.check_output([script_path, str(file1), str(file2)], cwd=temp_dir)
         return int(output)
 

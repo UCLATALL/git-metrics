@@ -1,5 +1,5 @@
 from .similarity import compare
-from .activity import compile
+from .activity import compile_activity
 from .utils import (
     date_range,
     recent_commit,
@@ -9,4 +9,4 @@ from .utils import (
     parse_date,
 )
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"

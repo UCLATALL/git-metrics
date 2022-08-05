@@ -1,34 +1,11 @@
-import csv
 import git
-import os
 
 from datetime import datetime
-from dateutil import parser as dateparser
-from typing import Optional, Union
 
 from . import utils as utils
 
 
-def compile(
-    branch: git.Head,
-    start_date: Union[str, datetime],
-    end_date: Optional[Union[str, datetime]] = datetime.now().astimezone(),
-    output: Optional[os.PathLike] = None,
-) -> list[dict]:
-    if not isinstance(start_date, datetime):
-        start_date = dateparser.parse(start_date).astimezone()
-    if not isinstance(end_date, datetime):
-        end_date = dateparser.parse(start_date).astimezone()
-    activity = git_activity(branch, start_date, end_date)
-    if output is not None:
-        with open(output, "w") as file:
-            write = csv.writer(file, quoting=csv.QUOTE_ALL)
-            write.writerow(activity[0].keys())
-            write.writerows([row.values() for row in activity])
-    return activity
-
-
-def git_activity(
+def compile_activity(
     branch: git.Head, start_date: datetime, end_date: datetime
 ) -> list[dict]:
     rows = []
