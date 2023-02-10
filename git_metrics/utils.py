@@ -1,4 +1,5 @@
 import click
+import contextlib
 import csv
 import git
 import os
@@ -17,36 +18,31 @@ def assert_git_installed() -> None:
 
 def recent_commit(branch: git.Head, date: datetime) -> git.Commit:
     repo = branch.repo
-    hash = repo.git.log(
-        branch, "-1", f"--until={date.isoformat()}", "--format=format:%H"
-    )
-    if hash == "":
-        raise Exception("No commits were made prior to the given date.")
-    return repo.commit(hash)
+    until = date.isoformat()
+    sha = repo.git.log(branch, "-1", f"--until={until}", "--format=format:%H")
+    if sha == "":
+        raise ValueError("No commits were made prior to the given date.")
+    return repo.commit(sha)
 
 
 def resolve_branch(repo: git.Repo, branch: str = "main") -> git.Head:
     try:
         return repo.branches[branch]
-    except IndexError:
+    except IndexError as exc:
         if branch == "main":
-            try:
+            with contextlib.suppress(IndexError):
                 return repo.branches["master"]
-            except IndexError:
-                pass
-        raise ValueError(f'"{branch}" does not resolve to a valid branch.')
+        raise ValueError(f'"{branch}" does not resolve to a valid branch.') from exc
 
 
 def resolve_commit(repo: git.Repo, commit_ref: str = "main") -> git.Commit:
     try:
         return repo.commit(commit_ref)
-    except (git.BadName):
+    except git.BadName as exc:
         if commit_ref == "main":
-            try:
+            with contextlib.suppress(git.BadName):
                 return repo.commit("master")
-            except (git.BadName):
-                pass
-        raise ValueError(f'"{commit_ref}" does not resolve to a valid commit.')
+        raise ValueError(f'"{commit_ref}" does not resolve to a valid commit.') from exc
 
 
 def date_range(start_date: datetime, end_date: datetime) -> list[datetime]:
@@ -59,8 +55,8 @@ def date_range(start_date: datetime, end_date: datetime) -> list[datetime]:
 def parse_date(date: str) -> datetime:
     try:
         return dateparser.parse(date).astimezone()
-    except dateparser.ParserError:
-        raise ValueError(f'Had trouble with "{date}", try "YYYY-MM-DD" format')
+    except dateparser.ParserError as exc:
+        raise ValueError(f'Had trouble with "{date}", try "YYYY-MM-DD" format') from exc
 
 
 def dt_to_str(dt: datetime) -> str:
@@ -91,10 +87,8 @@ def create_progress_bar(
 
 
 def listdict_to_csv(data: list[dict], file: Union[os.PathLike, click.File]) -> None:
-    try:
+    with contextlib.suppress(TypeError):
         file = open(file, "w")
-    except TypeError:
-        pass
     write = csv.writer(file, quoting=csv.QUOTE_ALL)
     write.writerow(data[0].keys())
     write.writerows([row.values() for row in data])

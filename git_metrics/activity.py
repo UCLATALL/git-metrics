@@ -2,7 +2,7 @@ import git
 
 from datetime import datetime
 
-from . import utils as utils
+from git_metrics import utils
 
 
 def compile_activity(

@@ -5,9 +5,9 @@ import pathlib
 from datetime import datetime
 from typing import Tuple
 
-from .activity import compile_activity
-from .similarity import compare
-from . import utils as utils
+from git_metrics.activity import compile_activity
+from git_metrics.similarity import compare
+from git_metrics import utils
 
 
 @click.command()
@@ -77,7 +77,7 @@ def similarity(
     "--end",
     "end",
     show_default=False,
-    default=str(datetime.today().astimezone().date()),
+    default=str(datetime.now().astimezone().date()),
     help="The date-time to end on (use YYYY-MM-DD) [default: today]",
 )
 @click.option(
@@ -126,7 +126,7 @@ def similarity_across(
     check_output(output, overwrite)
     repo = get_repo(repo)
     branch = utils.resolve_branch(repo, branch)
-    end = datetime.today().astimezone() if end is None else utils.parse_date(end)
+    end = datetime.now().astimezone() if end is None else utils.parse_date(end)
 
     rows = []
     anchors = [utils.parse_date(date) for date in list(start)]
@@ -161,7 +161,7 @@ def similarity_across(
     "--end",
     "end",
     show_default=False,
-    default=str(datetime.today().astimezone().date()),
+    default=str(datetime.now().astimezone().date()),
     help="The date-time to end on (use YYYY-MM-DD) [default: today]",
 )
 @click.option(
@@ -215,8 +215,9 @@ def get_repo(repo_path: str) -> git.Repo:
     try:
         repo_path = pathlib.Path(repo_path)
         return git.Repo(repo_path)
-    except (git.NoSuchPathError, git.InvalidGitRepositoryError):
-        raise ValueError(f'Could not find a valid git repository at "{repo_path}"')
+    except (git.NoSuchPathError, git.InvalidGitRepositoryError) as exc:
+        msg = f'Could not find a valid git repository at "{repo_path}"'
+        raise ValueError(msg) from exc
 
 
 def check_output(output: click.File, overwrite: bool):

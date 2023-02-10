@@ -7,7 +7,7 @@ import subprocess as sp
 from tempfile import TemporaryDirectory
 from typing import Any, Generator, Optional
 
-from . import utils as utils
+from git_metrics import utils
 
 
 def compare(start: git.Commit, end: git.Commit, glob: str = "*") -> int:
@@ -32,11 +32,13 @@ def read_files(commit: git.Commit, glob: str = "*") -> str:
 def list_git_files(
     commit: git.Commit,
     glob: str = "*",
-    types: Optional[list[str]] = [".md", ".html", ".js", ".css", ".txt"],
+    types: Optional[list[str]] = None,
     tree: Optional[git.Tree] = None,
     rel_path: Optional[pathlib.Path] = None,
 ) -> Generator[pathlib.Path, Any, Any]:
     """List files present in the git tree at a given commit."""
+    if types is None:
+        types = [".md", ".html", ".js", ".css", ".txt"]
     tree = tree if tree is not None else commit.tree
     working_dir = pathlib.Path(commit.repo.working_dir)
     rel_path = rel_path if rel_path is not None else working_dir

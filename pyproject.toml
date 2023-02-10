@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "git-metrics"
-version = "1.0.1"
+version = "1.0.2"
 description = "Metrics for your git repository"
 authors = ["Adam Blake <adamblake@g.ucla.edu>"]
 license = "AGPL-3+"
