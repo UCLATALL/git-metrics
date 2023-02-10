@@ -1,28 +1,26 @@
 [tool.poetry]
 name = "git-metrics"
-version = "1.0.2"
-description = "Metrics for your git repository"
+version = "1.1.0"
+description = "Metrics for your git repository."
 authors = ["Adam Blake <adamblake@g.ucla.edu>"]
 license = "AGPL-3+"
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-GitPython = "^3.1.27"
 click = "^8.1.3"
+GitPython = "^3.1.27"
 pathlib = "^1.0.1"
 python-dateutil = "^2.8.2"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
 black = "^22.6.0"
 flake8 = "^4.0.1"
 mypy = "^0.971"
+pytest = "^5.2"
 
-[tool.poetry.scripts]
-git-similarity = "git_metrics.cli:similarity"
-git-similarity-across = "git_metrics.cli:similarity_across"
-git-activity = "git_metrics.cli:activity"
+[tool.poetry.plugins."console_scripts"]
+"git-metrics" = "git_metrics.cli:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

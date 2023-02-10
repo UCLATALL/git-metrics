@@ -8,9 +8,21 @@ from typing import Tuple
 from git_metrics.activity import compile_activity
 from git_metrics.similarity import compare
 from git_metrics import utils
+from git_metrics import __version__
 
 
-@click.command()
+@click.group()
+def main():
+    """Metrics for your git repository."""
+
+
+@main.command()
+def version() -> None:
+    """Display this app's version."""
+    click.echo(f"git-metrics {__version__}")
+
+
+@main.command()
 @click.argument("repo", type=str)
 @click.argument("start", type=str)
 @click.argument("end", type=str)
@@ -33,7 +45,7 @@ from git_metrics import utils
 )
 def similarity(
     repo: str, start: str, end: str, dates: bool = False, branch: str = "main"
-) -> str:
+) -> None:
     """
     Calculate the similarity of the content of a git REPO (specified by passing the
     path to the repo) by comparing the state at the START commit reference against
@@ -60,7 +72,7 @@ def similarity(
     )
 
 
-@click.command()
+@main.command()
 @click.argument("repo", type=str)
 @click.option(
     "-s",
@@ -115,7 +127,7 @@ def similarity_across(
     branch: str,
     output: click.File,
     overwrite: bool,
-):
+) -> None:
     """
     Compute the similarity metric for each day across all days between `--start` and
     `--end`. If multiple start points are given, the similarity is computed by creating
@@ -153,7 +165,7 @@ def similarity_across(
     click.echo(f'Wrote {len(rows)} rows to "{output.name}"')
 
 
-@click.command()
+@main.command()
 @click.argument("repo", type=str)
 @click.argument("start", type=str)
 @click.option(
@@ -194,7 +206,7 @@ def similarity_across(
 )
 def activity(
     repo: str, branch: str, start: str, end: str, output: click.File, overwrite: bool
-) -> str:
+) -> None:
     """
     Compile metrics of the activity on a git REPO's BRANCH from the START date to the
     `--end` date.
